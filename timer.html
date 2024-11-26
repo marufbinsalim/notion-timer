@@ -28,6 +28,10 @@
       }
       .controls {
         margin-top: 20px;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
       }
       select,
       button,
@@ -44,6 +48,7 @@
       }
       button {
         background-color: #e94560;
+        width: max-content;
       }
       select {
         background-color: #1a1a2e;
@@ -63,17 +68,16 @@
         body {
           padding: 20px;
         }
+        select {
+          width: 100%;
+        }
 
         #timer {
           font-size: 3rem;
         }
 
         input {
-          width: calc(100% - 40px);
-        }
-
-        #setTime {
-          width: calc(100% - 40px);
+          width: 100%;
         }
       }
     </style>
@@ -83,6 +87,7 @@
       <span id="timer">00:00:00</span>
     </div>
     <div class="controls">
+      <input type="text" id="editTime" placeholder="hh:mm:ss" />
       <select id="presetSelect">
         <option value="" disabled selected>Select a preset</option>
         <option value="1800">30 Minutes</option>
@@ -98,9 +103,11 @@
         <option value="19800">5.5 Hours</option>
         <option value="21600">6 Hours</option>
       </select>
-      <button id="startPause">Start</button>
-      <input type="text" id="editTime" placeholder="hh:mm:ss" />
-      <button id="setTime">Set Time</button>
+
+      <div class="buttons">
+        <button id="startPause">Start</button>
+        <button id="setTime">Set Time</button>
+      </div>
     </div>
     <script>
       // Helper to parse query parameter
@@ -170,6 +177,8 @@
         if (input.length === 3) {
           const [hours, minutes, seconds] = input.map(Number);
           if (!isNaN(hours) && !isNaN(minutes) && !isNaN(seconds)) {
+            pauseTimer();
+            startPauseButton.textContent = "Start";
             countdownTime = hours * 3600 + minutes * 60 + seconds;
             updateTimerDisplay();
             saveState();
@@ -183,7 +192,10 @@
 
       function setPresetTime(seconds) {
         pauseTimer(); // Pause the timer before resetting
+        startPauseButton.textContent = "Start";
         countdownTime = seconds;
+
+        editTimeInput.value = formatTime(seconds);
         updateTimerDisplay();
         saveState();
       }
@@ -206,11 +218,18 @@
         setPresetTime(selectedTime);
       });
 
+      // if editTime input is changed and the value is valid, unselect the preset
+      editTimeInput.addEventListener("input", () => {
+        presetSelect.selectedIndex = 0;
+      });
+
       // Initialize
       updateTimerDisplay();
       if (isRunning) {
         startTimer();
         startPauseButton.textContent = "Pause";
+      } else {
+        startPauseButton.textContent = "Start";
       }
     </script>
   </body>
