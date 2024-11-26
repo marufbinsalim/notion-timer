@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Persistent Timer</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        background-color: #1a1a2e;
+        color: #ffffff;
+        font-family: "Arial", sans-serif;
+      }
+      #timer {
+        font-size: 8rem;
+        font-weight: bold;
+        letter-spacing: 0.2em;
+        text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.4);
+      }
+      .controls {
+        margin-top: 20px;
+      }
+      select,
+      button,
+      input {
+        font-size: 1.2rem;
+        margin: 10px;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        color: white;
+        cursor: pointer;
+        background-color: #1a1a2e;
+        transition: background-color 0.3s;
+      }
+      button {
+        background-color: #e94560;
+      }
+      select {
+        background-color: #1a1a2e;
+        color: white;
+      }
+      button:hover {
+        background-color: #b83244;
+      }
+      input {
+        color: black;
+        border: 1px solid #e94560;
+        text-align: center;
+        color: white;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="timer-container">
+      <span id="timer">00:00:00</span>
+    </div>
+    <div class="controls">
+      <select id="presetSelect">
+        <option value="" disabled selected>Select a preset</option>
+        <option value="1800">30 Minutes</option>
+        <option value="3600">1 Hour</option>
+        <option value="5400">1.5 Hours</option>
+        <option value="7200">2 Hours</option>
+        <option value="9000">2.5 Hours</option>
+        <option value="10800">3 Hours</option>
+        <option value="12600">3.5 Hours</option>
+        <option value="14400">4 Hours</option>
+        <option value="16200">4.5 Hours</option>
+        <option value="18000">5 Hours</option>
+        <option value="19800">5.5 Hours</option>
+        <option value="21600">6 Hours</option>
+      </select>
+      <button id="startPause">Start</button>
+      <input type="text" id="editTime" placeholder="hh:mm:ss" />
+      <button id="setTime">Set Time</button>
+    </div>
+    <script>
+      let countdownTime =
+        parseInt(localStorage.getItem("countdownTime")) || 3600; // Default: 1 hour
+      let isRunning = localStorage.getItem("isRunning") === "true";
+      let timerInterval;
+
+      const timerElement = document.getElementById("timer");
+      const startPauseButton = document.getElementById("startPause");
+      const editTimeInput = document.getElementById("editTime");
+      const setTimeButton = document.getElementById("setTime");
+      const presetSelect = document.getElementById("presetSelect");
+
+      function formatTime(seconds) {
+        const hours = Math.floor(seconds / 3600)
+          .toString()
+          .padStart(2, "0");
+        const minutes = Math.floor((seconds % 3600) / 60)
+          .toString()
+          .padStart(2, "0");
+        const secs = (seconds % 60).toString().padStart(2, "0");
+        return `${hours}:${minutes}:${secs}`;
+      }
+
+      function updateTimerDisplay() {
+        timerElement.textContent = formatTime(countdownTime);
+      }
+
+      function saveState() {
+        localStorage.setItem("countdownTime", countdownTime);
+        localStorage.setItem("isRunning", isRunning);
+      }
+
+      function startTimer() {
+        if (!isRunning) {
+          isRunning = true;
+          saveState();
+          timerInterval = setInterval(() => {
+            if (countdownTime > 0) {
+              countdownTime--;
+              updateTimerDisplay();
+              saveState();
+            } else {
+              clearInterval(timerInterval);
+            }
+          }, 1000);
+        }
+      }
+
+      function pauseTimer() {
+        isRunning = false;
+        clearInterval(timerInterval);
+        saveState();
+      }
+
+      function setCustomTime() {
+        const input = editTimeInput.value.split(":");
+        if (input.length === 3) {
+          const [hours, minutes, seconds] = input.map(Number);
+          if (!isNaN(hours) && !isNaN(minutes) && !isNaN(seconds)) {
+            countdownTime = hours * 3600 + minutes * 60 + seconds;
+            updateTimerDisplay();
+            saveState();
+          } else {
+            alert("Invalid time format. Use hh:mm:ss.");
+          }
+        } else {
+          alert("Invalid time format. Use hh:mm:ss.");
+        }
+      }
+
+      function setPresetTime(seconds) {
+        pauseTimer(); // Pause the timer before resetting
+        countdownTime = seconds;
+        updateTimerDisplay();
+        saveState();
+      }
+
+      // Event Listeners
+      startPauseButton.addEventListener("click", () => {
+        if (isRunning) {
+          pauseTimer();
+          startPauseButton.textContent = "Start";
+        } else {
+          startTimer();
+          startPauseButton.textContent = "Pause";
+        }
+      });
+
+      setTimeButton.addEventListener("click", setCustomTime);
+
+      presetSelect.addEventListener("change", () => {
+        const selectedTime = parseInt(presetSelect.value);
+        setPresetTime(selectedTime);
+      });
+
+      // Initialize
+      updateTimerDisplay();
+      if (isRunning) {
+        startTimer();
+        startPauseButton.textContent = "Pause";
+      }
+    </script>
+  </body>
+</html>
